@@ -6,7 +6,6 @@
 import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
 import rospy
 
-from sensor_msgs.msg import Image    # for receiving the video feed
 from geometry_msgs.msg import Twist  # for sending commands to the drone
 from std_msgs.msg import Empty       # for land/takeoff/emergency
 from ardrone_autonomy.msg import Navdata # for receiving navdata feedback (only state is used)
@@ -15,16 +14,12 @@ from drone_status import DroneStatus
 
 # This class implements basic control functionality which we will be using in future tutorials.
 # It can command takeoff/landing/emergency as well as drone movement
-# Furthermore, when it receives a new video frame, it saves it locally
 # It also tracks the drone state based on navdata feedback
 
 class BasicDroneController(object):
 	def __init__(self):
 		# holds the current status
 		self.status = -1
-
-		# are we receiving from the drone?
-		self.connected = False
 
 		# subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
 		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
@@ -37,14 +32,12 @@ class BasicDroneController(object):
 		# allow the controller to publish to the /cmd_vel topic and thus control the drone
 		self.pubCommand = rospy.Publisher('/cmd_vel',Twist)
 
-		# finally, lets implement a timer to check whether we're still connected
-		self.connectionTimer = rospy.Timer(rospy.Duration(0.5), self.ConnectionCallback)
-		self.communicationSinceTimer = False
+		# setup regular publishing of control packets
+		self.commandMsg = Twist()
+		self.commandTimer = rospy.Timer(rospy.Duration(0.1),self.SendCommand)
 
-	# called every 0.5 seconds, if we haven't received anything since the last call, will assume we are having network troubles
-	def ConnectionCallback(self, event):
-		self.connected = self.communicationSinceTimer
-		self.communicationSinceTimer = False
+		# land the drone if we are shutting down
+		rospy.on_shutdown(self.SendLand)
 
 	def ReceiveNavdata(self,navdata):
 		# although there is a lot of data in this packet, we're only interested in the state at the moment	
@@ -66,13 +59,14 @@ class BasicDroneController(object):
 		# send an emergency (or reset) message to the ardrone driver
 		self.pubReset.publish(Empty())
 
-	def SendCommand(self,roll=0,pitch=0,yaw_velocity=0,z_velocity=0):
-		# send a control command to the ardrone
-		if self.status in [DroneStatus.Flying, DroneStatus.GotoHover, DroneStatus.Hovering]:
-			msg = Twist()
-			msg.linear.x = pitch
-			msg.linear.y = roll
-			msg.linear.z = z_velocity
-			msg.angular.z = yaw_velocity
-			self.pubCommand.publish(msg)
+	def SetCommand(self,roll=0,pitch=0,yaw_velocity=0,z_velocity=0):
+		self.commandMsg.linear.x = pitch
+		self.commandMsg.linear.y = roll
+		self.commandMsg.linear.z = z_velocity
+		self.commandMsg.angular.z = yaw_velocity
+
+	def SendCommand(self):
+		if self.status == DroneStatus.Flying or self.status == DroneStatus.GotoHover or self.status == DroneStatus.Hovering:
+			self.pubCommand.publish(self.commandMsg)
+			self.commandMsg = Twist() # reset the message after sending so it reverts to 0,0,0,0 unless updated
 

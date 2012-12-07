@@ -24,20 +24,20 @@ class KeyMapping(object):
 	Takeoff = ord('p')
 	Land = ord('l')
 	Emergency = ord(' ')
-
+	Exit = 27 # Esc key
 
 
 def handleKeypress(key):
 	if controller is not None: # it has been initialized
-		if key == KeyMapping.Emergency:
+		if key == KeyMapping.Exit:
+			controller.SendLand()
+			rospy.signal_shutdown('Great job, you flew like an ace!')
+		elif key == KeyMapping.Emergency:
 			controller.SendEmergency()
-
 		elif key == KeyMapping.Takeoff:
 			controller.SendTakeoff()
-
 		elif key == KeyMapping.Land:
 			controller.SendLand()
-
 		else:
 			roll = 0
 			pitch = 0
@@ -45,9 +45,9 @@ def handleKeypress(key):
 			z_velocity = 0
 
 			if key == KeyMapping.YawLeft:
-				yaw_velocity = -1
-			elif key == KeyMapping.YawRight:
 				yaw_velocity = 1
+			elif key == KeyMapping.YawRight:
+				yaw_velocity = -1
 
 			elif key == KeyMapping.PitchForward:
 				pitch = 1
@@ -64,7 +64,7 @@ def handleKeypress(key):
 			elif key == KeyMapping.DecreaseAltitude:
 				z_velocity = -1
 
-			controller.SendCommand(roll, pitch, yaw_velocity, z_velocity)
+			controller.SetCommand(roll, pitch, yaw_velocity, z_velocity)
 
 
 if __name__=='__main__':

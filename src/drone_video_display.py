@@ -40,6 +40,7 @@ class DroneVideoDisplay(object):
 
 		# holds the current status
 		self.status = None
+		self.battery = 0
 
 		# are we receiving from the drone?
 		self.connected = False
@@ -59,6 +60,9 @@ class DroneVideoDisplay(object):
 		self.windowName = 'AR.Drone Video Stream'
 		cv.NamedWindow(self.windowName)
 
+		# setting up cv to draw text on the screen
+		self.font = cv.InitFont(cv.CV_FONT_HERSHEY_SIMPLEX, 1, 1, 0, 3, 8) 
+
 		# holds a list of keyboard callbacks
 		self.keyboardCallbacks = []
 
@@ -67,10 +71,18 @@ class DroneVideoDisplay(object):
 
 	# called at a rate of 20Hz (50ms period), draws the current image on the screen and handles keypresses
 	def RedrawCallback(self, event):
-		cv.ShowImage(self.windowName,self.image) # draw the last received frame in our window
-		
-		if len(self.keyboardCallbacks)>0:
-			key = cv.WaitKey(10) # wait 10ms for a keypress (timer period is 50ms)
+		if self.image is not None: # we have received an image
+			img = self.image
+			if not self.connected:
+				cv.PutText(img, self.DisconnectedMessage, (10, img.height - 10), self.font, cv.RGB(255,0,0))
+			elif self.status in self.StatusMessages:
+				cv.PutText(img, self.StatusMessages[self.status] + ' (Battery: {}%)'.format(self.battery), (10, img.height - 10), self.font, cv.RGB(0,150,20))
+			else:
+				cv.PutText(img, self.UnknownMessage + ' (Battery: {}%)'.format(self.battery), (10, img.height - 10), self.font, cv.RGB(100,255,230))
+			cv.ShowImage(self.windowName,img) # draw the last received frame in our window
+
+		if not rospy.is_shutdown() and len(self.keyboardCallbacks)>0:
+			key = cv.WaitKey(20) # wait 50ms for a keypress (timer period is 50ms)
 			for callback in self.keyboardCallbacks:
 				callback(key)
 
@@ -97,5 +109,6 @@ class DroneVideoDisplay(object):
 	def ReceiveNavdata(self,navdata):
 		# although there is a lot of data in this packet, we're only interested in the state at the moment	
 		self.status = navdata.state
+		self.battery = int(navdata.batteryPercent)
 		self.communicationSinceTimer = True
 
