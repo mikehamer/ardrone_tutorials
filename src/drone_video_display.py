@@ -3,10 +3,11 @@
 # A basic video display window for the tutorial "Up and flying with the AR.Drone and ROS | Getting Started"
 # https://github.com/mikehamer/ardrone_tutorials_getting_started
 
+import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
 import rospy
 
 from sensor_msgs.msg import Image    # for receiving the video feed
-from ardrone_autonomy import navdata # for receiving navdata feedback (only state is used)
+from ardrone_autonomy.msg import Navdata # for receiving navdata feedback (only state is used)
 
 import cv_bridge, cv
 
@@ -44,7 +45,7 @@ class DroneVideoDisplay(object):
 		self.connected = False
 
 		# subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
-		self.subNavdata = rospy.Subscriber('/ardrone/navdata',navdata,self.ReceiveNavdata) 
+		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
 		
 		# subscribe to the drone's video feed, calling self.ReceiveImage when a new frame is received
 		self.subVideo   = rospy.Subscriber('/ardrone/image_raw',Image,self.ReceiveImage)
@@ -55,7 +56,7 @@ class DroneVideoDisplay(object):
 
 		# setting up cv to handle the image window
 		self.cvBridge = cv_bridge.CvBridge()
-		self.windowName = str(self.__hash__())
+		self.windowName = 'AR.Drone Video Stream'
 		cv.NamedWindow(self.windowName)
 
 		# holds a list of keyboard callbacks
@@ -69,10 +70,9 @@ class DroneVideoDisplay(object):
 		cv.ShowImage(self.windowName,self.image) # draw the last received frame in our window
 		
 		if len(self.keyboardCallbacks)>0:
-			key = cv.Waitkey(10)&255 # wait 10ms for a keypress (timer period is 50ms)
-			if key != -1: # something was pressed
-				for callback in self.keyboardCallbacks:
-					callback(key)
+			key = cv.WaitKey(10) # wait 10ms for a keypress (timer period is 50ms)
+			for callback in self.keyboardCallbacks:
+				callback(key)
 
 	# allows a custom callback to be added to handle keypresses
 	def AddKeyboardCallback(self, callback):
@@ -91,7 +91,7 @@ class DroneVideoDisplay(object):
 	# called when a new image is received
 	def ReceiveImage(self,image):
 		# store the new image when received
-		self.image = self.bridge.imgmsg_to_cv(image,'bgr8')
+		self.image = self.cvBridge.imgmsg_to_cv(image,'bgr8')
 		self.communicationSinceTimer = True
 
 	def ReceiveNavdata(self,navdata):

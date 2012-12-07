@@ -3,12 +3,13 @@
 # A basic drone controller class for the tutorial "Up and flying with the AR.Drone and ROS | Getting Started"
 # https://github.com/mikehamer/ardrone_tutorials_getting_started
 
+import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
 import rospy
 
 from sensor_msgs.msg import Image    # for receiving the video feed
 from geometry_msgs.msg import Twist  # for sending commands to the drone
 from std_msgs.msg import Empty       # for land/takeoff/emergency
-from ardrone_autonomy import navdata # for receiving navdata feedback (only state is used)
+from ardrone_autonomy.msg import Navdata # for receiving navdata feedback (only state is used)
 
 from drone_status import DroneStatus
 
@@ -26,7 +27,7 @@ class BasicDroneController(object):
 		self.connected = False
 
 		# subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
-		self.subNavdata = rospy.Subscriber('/ardrone/navdata',navdata,self.ReceiveNavdata) 
+		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
 		
 		# allow the controller to publish to the /ardrone/takeoff, land and reset topics
 		self.pubLand    = rospy.Publisher('/ardrone/land',Empty)
@@ -67,10 +68,11 @@ class BasicDroneController(object):
 
 	def SendCommand(self,roll=0,pitch=0,yaw_velocity=0,z_velocity=0):
 		# send a control command to the ardrone
-		msg = Twist()
-		msg.linear.x = pitch
-		msg.linear.y = roll
-		msg.linear.z = z_velocity
-		msg.angular.z = yaw_velocity
-		self.pubCommand.publish(msg)
+		if self.status in [DroneStatus.Flying, DroneStatus.GotoHover, DroneStatus.Hovering]:
+			msg = Twist()
+			msg.linear.x = pitch
+			msg.linear.y = roll
+			msg.linear.z = z_velocity
+			msg.angular.z = yaw_velocity
+			self.pubCommand.publish(msg)
 
