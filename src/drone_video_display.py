@@ -3,22 +3,34 @@
 # A basic video display window for the tutorial "Up and flying with the AR.Drone and ROS | Getting Started"
 # https://github.com/mikehamer/ardrone_tutorials_getting_started
 
+# This display window listens to the drone's video feeds and updates the display at regular intervals
+# It also tracks the drone's status and any connection problems, displaying them in the window's status bar
+# By default it includes no control functionality. The class can be extended to implement key or mouse listeners if required
+
+# Import the ROS libraries, and load the manifest file which through <depend package=... /> will give us access to the project dependencies
 import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
 import rospy
 
-from sensor_msgs.msg import Image    # for receiving the video feed
-from ardrone_autonomy.msg import Navdata # for receiving navdata feedback (only state is used)
+# Import the two types of messages we're interested in
+from sensor_msgs.msg import Image    	 # for receiving the video feed
+from ardrone_autonomy.msg import Navdata # for receiving navdata feedback
 
-import cv_bridge, cv
+# We need to use resource locking to handle synchronization between GUI thread and ROS topic callbacks
+from threading import Lock
 
+# An enumeration of Drone Statuses
 from drone_status import DroneStatus
 
-# This class implements basic control functionality which we will be using in future tutorials.
-# It can command takeoff/landing/emergency as well as drone movement
-# Furthermore, when it receives a new video frame, it saves it locally
-# It also tracks the drone state based on navdata feedback
+# The GUI libraries
+from PySide import QtCore, QtGui
 
-class DroneVideoDisplay(object):
+
+# Some Constants
+CONNECTION_CHECK_PERIOD = 250 #ms
+GUI_UPDATE_PERIOD = 20 #ms
+
+
+class DroneVideoDisplay(QtGui.QMainWindow):
 	StatusMessages = {
 		DroneStatus.Emergency : 'Emergency',
 		DroneStatus.Inited    : 'Initialized',
@@ -35,80 +47,80 @@ class DroneVideoDisplay(object):
 	UnknownMessage = 'Unknown Status'
 	
 	def __init__(self):
-		# holds the current video frame
-		self.image = None
+		# Construct the parent class
+		super(DroneVideoDisplay, self).__init__()
 
-		# holds the current status
-		self.status = None
-		self.battery = 0
+		# Setup our very basic GUI - a label which fills the whole window and holds our image
+		self.setWindowTitle('AR.Drone Video Feed')
+		self.imageBox = QtGui.QLabel(self)
+		self.setCentralWidget(self.imageBox)
 
-		# are we receiving from the drone?
-		self.connected = False
-
-		# subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
+		# Subscribe to the /ardrone/navdata topic, of message type navdata, and call self.ReceiveNavdata when a message is received
 		self.subNavdata = rospy.Subscriber('/ardrone/navdata',Navdata,self.ReceiveNavdata) 
 		
-		# subscribe to the drone's video feed, calling self.ReceiveImage when a new frame is received
+		# Subscribe to the drone's video feed, calling self.ReceiveImage when a new frame is received
 		self.subVideo   = rospy.Subscriber('/ardrone/image_raw',Image,self.ReceiveImage)
 		
-		# a timer to check whether we're still connected
-		self.connectionTimer = rospy.Timer(rospy.Duration(0.5), self.ConnectionCallback)
+		# Holds the image frame received from the drone and later processed by the GUI
+		self.image = None
+		self.imageLock = Lock()
+		
+		# Holds the status message to be displayed on the next GUI update
+		self.statusMessage = ''
+
+		# Tracks whether we have received data since the last connection check
+		# This works because data comes in at 50Hz but we're checking for a connection at 4Hz
 		self.communicationSinceTimer = False
+		self.connected = False
 
-		# setting up cv to handle the image window
-		self.cvBridge = cv_bridge.CvBridge()
-		self.windowName = 'AR.Drone Video Stream'
-		cv.NamedWindow(self.windowName)
+		# A timer to check whether we're still connected
+		self.connectionTimer = QtCore.QTimer(self)
+		self.connectionTimer.timeout.connect(self.ConnectionCallback)
+		self.connectionTimer.start(CONNECTION_CHECK_PERIOD)
+		
+		# A timer to redraw the GUI
+		self.redrawTimer = QtCore.QTimer(self)
+		self.redrawTimer.timeout.connect(self.RedrawCallback)
+		self.redrawTimer.start(GUI_UPDATE_PERIOD)
 
-		# setting up cv to draw text on the screen
-		self.font = cv.InitFont(cv.CV_FONT_HERSHEY_SIMPLEX, 1, 1, 0, 3, 8) 
-
-		# holds a list of keyboard callbacks
-		self.keyboardCallbacks = []
-
-		# and finally, the timer which runs the main redraw loop and dispatches keypresses to callbacks
-		self.redrawTimer = rospy.Timer(rospy.Duration(0.05), self.RedrawCallback)
-
-	# called at a rate of 20Hz (50ms period), draws the current image on the screen and handles keypresses
-	def RedrawCallback(self, event):
-		if self.image is not None: # we have received an image
-			img = self.image
-			if not self.connected:
-				cv.PutText(img, self.DisconnectedMessage, (10, img.height - 10), self.font, cv.RGB(255,0,0))
-			elif self.status in self.StatusMessages:
-				cv.PutText(img, self.StatusMessages[self.status] + ' (Battery: {}%)'.format(self.battery), (10, img.height - 10), self.font, cv.RGB(0,150,20))
-			else:
-				cv.PutText(img, self.UnknownMessage + ' (Battery: {}%)'.format(self.battery), (10, img.height - 10), self.font, cv.RGB(100,255,230))
-			cv.ShowImage(self.windowName,img) # draw the last received frame in our window
-
-		if not rospy.is_shutdown() and len(self.keyboardCallbacks)>0:
-			key = cv.WaitKey(20) # wait 50ms for a keypress (timer period is 50ms)
-			for callback in self.keyboardCallbacks:
-				callback(key)
-
-	# allows a custom callback to be added to handle keypresses
-	def AddKeyboardCallback(self, callback):
-		self.keyboardCallbacks.append(callback)
-
-	# allows the removal of custom keypress callbacks
-	def RemoveKeyboardCallback(self, callback):
-		if callback in self.keyboardCallbacks:
-			self.keyboardCallbacks.remove(callback)
-
-	# called every 0.5 seconds, if we haven't received anything since the last call, will assume we are having network troubles
-	def ConnectionCallback(self, event):
+	# Called every CONNECTION_CHECK_PERIOD ms, if we haven't received anything since the last callback, will assume we are having network troubles and display a message in the status bar
+	def ConnectionCallback(self):
 		self.connected = self.communicationSinceTimer
 		self.communicationSinceTimer = False
 
-	# called when a new image is received
-	def ReceiveImage(self,image):
-		# store the new image when received
-		self.image = self.cvBridge.imgmsg_to_cv(image,'bgr8')
+	def RedrawCallback(self):
+		if self.image is not None:
+			# We have some issues with locking between the display thread and the ros messaging thread due to the size of the image, so we need to lock the resources
+			self.imageLock.acquire()
+			try:			
+					# Convert the ROS image into a QImage which we can display
+					image = QtGui.QPixmap.fromImage(QtGui.QImage(self.image.data, self.image.width, self.image.height, QtGui.QImage.Format_RGB888))
+			finally:
+				self.imageLock.release()
+
+			# We could  do more processing (eg OpenCV) here if we wanted to, but for now lets just display the window.
+			self.resize(image.width(),image.height())
+			self.imageBox.setPixmap(image)
+
+		# Update the status bar to show the current drone status & battery level
+		self.statusBar().showMessage(self.statusMessage if self.connected else self.DisconnectedMessage)
+
+	def ReceiveImage(self,data):
+		# Indicate that new data has been received (thus we are connected)
 		self.communicationSinceTimer = True
 
+		# We have some issues with locking between the GUI update thread and the ROS messaging thread due to the size of the image, so we need to lock the resources
+		self.imageLock.acquire()
+		try:
+			self.image = data # Save the ros image for processing by the display thread
+		finally:
+			self.imageLock.release()
+
 	def ReceiveNavdata(self,navdata):
-		# although there is a lot of data in this packet, we're only interested in the state at the moment	
-		self.status = navdata.state
-		self.battery = int(navdata.batteryPercent)
+		# Indicate that new data has been received (thus we are connected)
 		self.communicationSinceTimer = True
+
+		# Update the message to be displayed
+		msg = self.StatusMessages[navdata.state] if navdata.state in self.StatusMessages else self.UnknownMessage
+		self.statusMessage = '{} (Battery: {}%)'.format(msg,int(navdata.batteryPercent))
 
