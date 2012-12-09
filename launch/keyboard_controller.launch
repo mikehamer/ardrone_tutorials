@@ -12,5 +12,5 @@
 	</node>
 	
 	<!-- Launches the keyboard controller -->
-	<node name="keyboard_controller" pkg="ardrone_tutorials_getting_started" type="keyboard_controller.py" output="screen"/>
+	<node name="keyboard_controller" pkg="ardrone_tutorials_getting_started" type="keyboard_controller.py" output="screen" required="true"/>
 </launch>
