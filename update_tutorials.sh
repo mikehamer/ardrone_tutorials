@@ -2,7 +2,7 @@
 
 roscd
 
-if [ -f ardrone_autonomy ];
+if [ -f "ardrone_autonomy" ];
 then
  cd ardrone_autonomy
  git pull
@@ -15,7 +15,7 @@ else
  roscd
 fi
 
-if [ -f ardrone_tutorials_getting_started ];
+if [ -f "ardrone_tutorials_getting_started" ];
 then
  cd ardrone_tutorials_getting_started
  git pull
