@@ -6,12 +6,14 @@ if [ -f ardrone_autonomy ];
 then
  cd ardrone_autonomy
  git pull
+ ./build_sdk.sh
  roscd
 else
  git clone https://github.com/AutonomyLab/ardrone_autonomy.git
+ cd ardrone_autonomy
+ ./build_sdk.sh
+ roscd
 fi
-
-ardrone_autonomy/build_sdk.sh
 
 if [ -f ardrone_tutorials_getting_started ];
 then
