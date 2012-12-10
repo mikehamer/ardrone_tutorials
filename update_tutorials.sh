@@ -2,7 +2,7 @@
 
 roscd
 
-if [-f ardrone_autonomy];
+if [ -f ardrone_autonomy ];
 then
  cd ardrone_autonomy
  git pull
@@ -13,7 +13,7 @@ fi
 
 ardrone_autonomy/build_sdk.sh
 
-if [-f ardrone_tutorials_getting_started];
+if [ -f ardrone_tutorials_getting_started ];
 then
  cd ardrone_tutorials_getting_started
  git pull
@@ -26,3 +26,5 @@ rospack profile
 rosstack profile
 
 rosmake -a
+
+read -p "Update complete. Press [Enter] to continue."
