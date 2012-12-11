@@ -12,10 +12,12 @@ Tutorial Overview
 -----------------
 
 In this tutorial (#1) we will:
+
 1. Install ROS, the AR.Drone driver and AR.Drone keyboard controller
 2. Fly the AR.Drone using the provided keyboard controller
 
 In tutorials 2-5, we will:
+
 2. Modify the keyboard controller to work with a joystick or control pad, giving much finer control (coming late December)
 3. Look more closely at the data sent back from the drone and play with the on-board tag detection (coming early January)
 4. Write a controller for the drone which allows us to control drone velocity, rather than body angle (coming late January)
