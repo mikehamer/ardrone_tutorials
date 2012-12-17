@@ -11,8 +11,8 @@
 	    <param name="control_yaw" value="0.7" /> <!-- maximum rotation rate in radians/sec = 40 degrees per second (1/9 rev/sec) -->
 
 	    <param name="detect_type" value="10" />
-	    <param name="detections_select_h" value="32" />  <!-- In the horizontal camera, look for the A4 page -->
-	    <param name="detections_select_v_hsync" value="128" />  <!-- In the vertical camera, detect the orange-blue-orange markers -->
+	    <param name="detections_select_h" value="32" />  <!-- In the horizontal camera, look for the orange-blue-orange markers -->
+	    <param name="detections_select_v_hsync" value="128" />  <!-- In the vertical camera, detect the A4 marker -->
 	    <param name="enemy_colors" value="3" />
 	    <param name="enemy_without_shell" value="0" />
 	</node>
