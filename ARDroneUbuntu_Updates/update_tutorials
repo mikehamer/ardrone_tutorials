@@ -1,0 +1,13 @@
+#!/bin/bash
+source /home/ardrone/.rosrc
+
+# fetch an build the driver
+roscd
+
+if [ ! -d "ardrone_tutorials_getting_started" ];
+then
+ git clone https://github.com/mikehamer/ardrone_tutorials_getting_started.git
+fi
+
+chmod +x ardrone_tutorials_getting_started/update_tutorials.sh
+source ardrone_tutorials_getting_started/update_tutorials.sh
