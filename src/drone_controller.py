@@ -8,7 +8,7 @@
 # It also tracks the drone state based on navdata feedback
 
 # Import the ROS libraries, and load the manifest file which through <depend package=... /> will give us access to the project dependencies
-import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
+import roslib; roslib.load_manifest('ardrone_tutorials')
 import rospy
 
 # Import the messages we're interested in sending and receiving

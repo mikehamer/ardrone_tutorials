@@ -8,7 +8,7 @@
 # By default it includes no control functionality. The class can be extended to implement key or mouse listeners if required
 
 # Import the ROS libraries, and load the manifest file which through <depend package=... /> will give us access to the project dependencies
-import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
+import roslib; roslib.load_manifest('ardrone_tutorials')
 import rospy
 
 # Import the two types of messages we're interested in
