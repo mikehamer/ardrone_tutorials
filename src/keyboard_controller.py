@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 # The Keyboard Controller Node for the tutorial "Up and flying with the AR.Drone and ROS | Getting Started"
-# https://github.com/mikehamer/ardrone_tutorials_getting_started
+# https://github.com/mikehamer/ardrone_tutorials
 
 # This controller extends the base DroneVideoDisplay class, adding a keypress handler to enable keyboard control of the drone
 
 # Import the ROS libraries, and load the manifest file which through <depend package=... /> will give us access to the project dependencies
-import roslib; roslib.load_manifest('ardrone_tutorials_getting_started')
+import roslib; roslib.load_manifest('ardrone_tutorials')
 import rospy
 
 # Load the DroneController class, which handles interactions with the drone, and the DroneVideoDisplay class, which handles video display

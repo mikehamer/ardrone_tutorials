@@ -3,7 +3,7 @@ Up and flying with the AR.Drone and ROS
 
 This repository contains the source-code for the Up and flying with the AR.Drone and ROS tutorial series, published on [Robohub](http://www.robohub.org).
 
-A stable branch is maintained for each of the released tutorials, with the master branch always synchronized with the stable branch of the latest tutorial.
+A stable branch is maintained for each of the released tutorials, with the master branch always synchronized with the stable branch of the latest tutorial. Each tutorial's branch also contains all source-code required for the previous tutorials.
 
 The following tutorials are planned for the series:
 

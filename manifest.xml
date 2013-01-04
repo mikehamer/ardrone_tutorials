@@ -1,6 +1,6 @@
 <package>
-  <description brief="AR.Drone keyboard controller">
-  	A keyboard controller developed for the "Up and flying with the AR.Drone and ROS" tutorial series
+  <description brief="AR.Drone Tutorials">
+  	Controllers developed for the "Up and flying with the AR.Drone and ROS" tutorial series
   </description>
   <author>Mike Hamer</author>
   <license>BSD</license>
@@ -8,6 +8,7 @@
   <url>http://github.com/mikehamer/ardrone_tutorials</url>
 
   <depend package="ardrone_autonomy" />
+  <depend package="joy" />
   
 </package>
 

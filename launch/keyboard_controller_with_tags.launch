@@ -13,8 +13,8 @@
 	    <param name="detect_type" value="10" />
 	    <param name="detections_select_h" value="32" />  <!-- In the horizontal camera, look for the orange-blue-orange markers -->
 	    <param name="detections_select_v_hsync" value="128" />  <!-- In the vertical camera, detect the A4 marker -->
-	    <param name="enemy_colors" value="3" />
-	    <param name="enemy_without_shell" value="0" />
+	    <param name="enemy_colors" value="3" />  <!-- Orange-Blue-Orange = 3 -->
+	    <param name="enemy_without_shell" value="0" />  <!-- Detect the indoor stickers, rather than the outdoor hull -->
 	</node>
 	
 	<!-- Launches the keyboard controller -->
