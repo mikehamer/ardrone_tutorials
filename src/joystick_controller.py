@@ -39,10 +39,13 @@ ScaleZ          = 1.0
 # handles the reception of joystick packets
 def ReceiveJoystickMessage(data):
 	if data.buttons[ButtonEmergency]==1:
+		rospy.loginfo("Emergency Button Pressed")
 		controller.SendEmergency()
 	elif data.buttons[ButtonLand]==1:
+		rospy.loginfo("Land Button Pressed")
 		controller.SendLand()
 	elif data.buttons[ButtonTakeoff]==1:
+		rospy.loginfo("Takeoff Button Pressed")
 		controller.SendTakeoff()
 	else:
 		controller.SetCommand(data.axes[AxisRoll]/ScaleRoll,data.axes[AxisPitch]/ScalePitch,data.axes[AxisYaw]/ScaleYaw,data.axes[AxisZ]/ScaleZ)
@@ -70,7 +73,6 @@ if __name__=='__main__':
 	# Now we construct our Qt Application and associated controllers and windows
 	app = QtGui.QApplication(sys.argv)
 	display = DroneVideoDisplay()
-
 	controller = BasicDroneController()
 
 	# subscribe to the /joy topic and handle messages of type Joy with the function ReceiveJoystickMessage
