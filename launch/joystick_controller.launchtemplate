@@ -22,7 +22,7 @@
 	</node>
 	
 	<!-- Launches the joystick controller -->
-	<node name="joystick_controller" pkg="ardrone_tutorials" type="joystick_controller.py" required="true">
+	<node name="joystick_controller" pkg="ardrone_tutorials" type="joystick_controller.py" output="screen" required="true">
 		<!-- Configures the joystick button mapping -->
 		<param name="ButtonEmergency"	value="<YOUR MAPPING eg 0>" />
 		<param name="ButtonLand"		value="<YOUR MAPPING eg 1>" />
