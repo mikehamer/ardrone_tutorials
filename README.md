@@ -16,4 +16,4 @@ The following tutorials are planned for the series:
 Virtual Machine
 ---------------
 
-These tutorials are (optionally) supported by the custom ARDroneUbuntu virtual machine. This includes all software and source-code required to run this tutorial.
+These tutorials are (optionally) supported by the custom [ARDroneUbuntu virtual machine](http://bit.ly/VqtDql). This includes all software and source-code required to run this tutorial. Refer to the first tutorial on how to use the virtual machine.
