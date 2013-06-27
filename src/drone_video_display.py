@@ -28,6 +28,7 @@ from PySide import QtCore, QtGui
 # Some Constants
 CONNECTION_CHECK_PERIOD = 250 #ms
 GUI_UPDATE_PERIOD = 20 #ms
+DETECT_RADIUS = 4 # the radius of the circle drawn when a tag is detected
 
 
 class DroneVideoDisplay(QtGui.QMainWindow):
@@ -64,6 +65,9 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 		# Holds the image frame received from the drone and later processed by the GUI
 		self.image = None
 		self.imageLock = Lock()
+
+		self.tags = []
+		self.tagLock = Lock()
 		
 		# Holds the status message to be displayed on the next GUI update
 		self.statusMessage = ''
@@ -95,6 +99,20 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 			try:			
 					# Convert the ROS image into a QImage which we can display
 					image = QtGui.QPixmap.fromImage(QtGui.QImage(self.image.data, self.image.width, self.image.height, QtGui.QImage.Format_RGB888))
+					if len(self.tags) > 0:
+						self.tagLock.acquire()
+						try:
+							painter = QtGui.QPainter()
+							painter.begin(image)
+							painter.setPen(QtGui.QColor(255,0,0))
+							painter.setBrush(QtGui.QColor(255,0,0))
+							for (x,y,d) in self.tags:
+								r = QtCore.QRectF((x*image.width())/1000-DETECT_RADIUS,(y*image.height())/1000-DETECT_RADIUS,DETECT_RADIUS*2,DETECT_RADIUS*2)
+								painter.drawEllipse(r)
+								painter.drawText(x+DETECT_RADIUS,y+DETECT_RADIUS,str(d))
+							painter.end()
+						finally:
+							self.tagLock.release()
 			finally:
 				self.imageLock.release()
 
@@ -124,3 +142,21 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 		msg = self.StatusMessages[navdata.state] if navdata.state in self.StatusMessages else self.UnknownMessage
 		self.statusMessage = '{} (Battery: {}%)'.format(msg,int(navdata.batteryPercent))
 
+		self.tagLock.acquire()
+		try:
+			if navdata.tags_count > 0:
+				self.tags = [(navdata.tags_xc[i],navdata.tags_yc[i],navdata.tags_distance[i]) for i in range(0,navdata.tags_count)]
+			else:
+				self.tags = []
+		finally:
+			self.tagLock.release()
+
+if __name__=='__main__':
+	import sys
+	rospy.init_node('ardrone_video_display')
+	app = QtGui.QApplication(sys.argv)
+	display = DroneVideoDisplay()
+	display.show()
+	status = app.exec_()
+	rospy.signal_shutdown('Great Flying!')
+	sys.exit(status)

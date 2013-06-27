@@ -37,6 +37,7 @@ rollCmd = np.array([])
 rollEst = np.array([])
 
 def plotLoop():
+    global timeEst, pitchEst, rollEst, timeCmd, pitchCmd, rollCmd
     fig,ax = pl.subplots(2,1)
     fig.show()
     fig.canvas.draw()
