@@ -22,8 +22,9 @@ import matplotlib.pylab as pl
 # We need to use resource locking to handle synchronization between plot thread and ROS topic callbacks
 from threading import Lock
 
-PLOT_RATE = 10
-EULER_ANGLE_MAX = 0.35
+PLOT_RATE = 5   # update 5 times per second
+PLOT_LENGTH = 5 # plot the last 5 seconds
+EULER_ANGLE_MAX = 0.35 # scale commands to this angle
 
 lockCmd = Lock()
 lockEst = Lock()
@@ -41,11 +42,15 @@ def plotLoop():
     fig.canvas.draw()
     
     # setting up the initial two plots
-    ax[0].set_title = 'AR.Drone Pitch'
-    ax[1].set_title = 'AR.Drone Roll'
-    ax[0].set_ylabel = 'Angle [deg]'
-    ax[1].set_ylabel = 'Angle [deg]'
-    ax[0].set_xlabel = 'Time [s]'
+    ax[0].set_title('AR.Drone Pitch')
+    ax[1].set_title('AR.Drone Roll')
+    ax[0].set_ylabel('Angle [deg]')
+    ax[1].set_ylabel('Angle [deg]')
+    ax[0].set_xlabel('Time [s]')
+    ax[0].set_xlim([-PLOT_LENGTH 0])
+    ax[1].set_xlim([-PLOT_LENGTH 0])
+    ax[0].set_ylim([-EULER_ANGLE_MAX*1.5 EULER_ANGLE_MAX*1.5])
+    ax[0].set_ylim([-EULER_ANGLE_MAX*1.5 EULER_ANGLE_MAX*1.5])
 
     # caching the figure background for faster updates
     bg = [fig.canvas.copy_from_bbox(a.bbox) for a in ax]
@@ -63,10 +68,25 @@ def plotLoop():
         #set the new plot data
         lockCmd.acquire()
         lockEst.acquire()
-        pltPitchEst.set_data(timeEst,pitchEst)
-        pltPitchCmd.set_data(timeCmd,pitchCmd)
-        pltRollEst.set_data(timeEst,rollEst)
-        pltRollCmd.set_data(timeCmd,rollCmd)
+        
+        t = rospy.get_rostime().to_sec() # store the current time
+        windowEst = timeEst>t-PLOT_LENGTH # capture only points within the last PLOT_LENGTH seconds
+        windowCmd = timeCmd>t-PLOT_LENGTH # capture only points within the last PLOT_LENGTH seconds
+
+        # discard old points
+        timeEst = timeEst[windowEst]
+        pitchEst = pitchEst[windowEst]
+        rollEst = rollEst[windowEst]
+
+        timeCmd = timeCmd[windowCmd]
+        pitchCmd = pitchCmd[windowCmd]
+        rollCmd = rollCmd[windowCmd]
+
+        # plot points
+        pltPitchEst.set_data(timeEst-t,pitchEst)
+        pltPitchCmd.set_data(timeCmd-t,pitchCmd)
+        pltRollEst.set_data(timeEst-t,rollEst)
+        pltRollCmd.set_data(timeCmd-t,rollCmd)
         lockCmd.release()
         lockEst.release()
 
