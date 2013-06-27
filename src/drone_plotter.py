@@ -86,20 +86,22 @@ def plotLoop():
         loop_rate.sleep()
 
 def ReceiveNavdata(data):
+    global timeEst, pitchEst, rollEst
     lockEst.acquire()
-    timeEst = timeEst.append(rospy.get_rostime().to_sec())
-    pitchEst = pitchEst.append(np.rad2deg(data.rotY))
-    rollEst = rollEst.append(np.rad2deg(data.rotX))
+    timeEst = np.append(timeEst, rospy.get_rostime().to_sec())
+    pitchEst = np.append(pitchEst, np.rad2deg(data.rotY))
+    rollEst = np.append(rollEst, np.rad2deg(data.rotX))
     lockEst.release()
 
 def ReceiveCmdVel(data):
+    global timeCmd, pitchCmd, rollCmd
     lockCmd.acquire()
-    timeCmd = timeCmd.append(rospy.get_rostime().to_sec())
-    pitchCmd = pitchCmd.append(np.rad2deg(data.linear.x*EULER_ANGLE_MAX))
-    rollCmd = rollCmd.append(np.rad2deg(data.linear.y*EULER_ANGLE_MAX))
+    timeCmd = np.append(timeCmd, rospy.get_rostime().to_sec())
+    pitchCmd = np.append(pitchCmd, np.rad2deg(data.linear.x*EULER_ANGLE_MAX))
+    rollCmd = np.append(rollCmd, np.rad2deg(data.linear.y*EULER_ANGLE_MAX))
     lockCmd.release()
 
-if name=='__main__':
+if __name__=='__main__':
     # initialize the ROS node
     rospy.init_node('ardrone_plotter')
 
