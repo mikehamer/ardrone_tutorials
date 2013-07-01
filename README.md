@@ -9,9 +9,9 @@ The following tutorials are planned for the series:
 
 1. Install the required software and use a keyboard-controller to control the drone from a computer ([tutorial](http://robohub.org/up-and-flying-with-the-ar-drone-and-ros-getting-started), [branch](https://github.com/mikehamer/ardrone_tutorials/tree/getting-started))
 2. Modify the keyboard controller to work with a joystick or control pad, giving much finer control ([tutorial](http://robohub.org/up-and-flying-with-the-ar-drone-and-ros-joystick-control), [branch](https://github.com/mikehamer/ardrone_tutorials/tree/joystick-control))
-3. Look more closely at the data sent back from the drone and play with the on-board tag detection (coming early January)
-4. Write a controller for the drone which allows us to control drone velocity, rather than body angle (coming late January)
-5. Look at computer vision applications using some existing ROS packages (coming early February)
+3. Look more closely at the data sent back from the drone and play with the on-board tag detection (coming very soon)
+4. Write a controller that allows the drone to maintain a specified distance from a tag
+5. Write a controller that allows us to control drone velocity, rather than body angle
 
 Virtual Machine
 ---------------
