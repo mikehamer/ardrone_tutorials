@@ -104,12 +104,12 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 						try:
 							painter = QtGui.QPainter()
 							painter.begin(image)
-							painter.setPen(QtGui.QColor(255,0,0))
-							painter.setBrush(QtGui.QColor(255,0,0))
+							painter.setPen(QtGui.QColor(0,255,0))
+							painter.setBrush(QtGui.QColor(0,255,0))
 							for (x,y,d) in self.tags:
 								r = QtCore.QRectF((x*image.width())/1000-DETECT_RADIUS,(y*image.height())/1000-DETECT_RADIUS,DETECT_RADIUS*2,DETECT_RADIUS*2)
 								painter.drawEllipse(r)
-								painter.drawText(x+DETECT_RADIUS,y+DETECT_RADIUS,str(d)[0:4])
+								painter.drawText((x*image.width())/1000+DETECT_RADIUS,(y*image.height())/1000-DETECT_RADIUS,str(d/100)[0:4]+'m')
 							painter.end()
 						finally:
 							self.tagLock.release()
