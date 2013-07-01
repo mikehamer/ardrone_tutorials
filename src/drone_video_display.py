@@ -109,7 +109,7 @@ class DroneVideoDisplay(QtGui.QMainWindow):
 							for (x,y,d) in self.tags:
 								r = QtCore.QRectF((x*image.width())/1000-DETECT_RADIUS,(y*image.height())/1000-DETECT_RADIUS,DETECT_RADIUS*2,DETECT_RADIUS*2)
 								painter.drawEllipse(r)
-								painter.drawText(x+DETECT_RADIUS,y+DETECT_RADIUS,str(d))
+								painter.drawText(x+DETECT_RADIUS,y+DETECT_RADIUS,str(d)[0:4])
 							painter.end()
 						finally:
 							self.tagLock.release()
